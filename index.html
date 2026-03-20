@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Budget Buddy</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="manifest" href="manifest.json">
+</head>
+<body class="bg-light">
+
+<div class="container mt-5">
+  <div class="card shadow-lg">
+    <div class="card-header bg-primary text-white text-center">
+      <h3>Budget Buddy</h3>
+    </div>
+    <div class="card-body text-center">
+      <label for="budget" class="form-label">Set Your Spending Limit</label>
+      <input type="number" id="budget" class="form-control mb-3" placeholder="Enter budget">
+
+      <button onclick="saveBudget()" class="btn btn-success mb-3">Save Budget</button>
+
+      <label for="expense" class="form-label">Add Expense</label>
+      <input type="number" id="expense" class="form-control mb-3" placeholder="Enter expense">
+
+      <button onclick="addExpense()" class="btn btn-warning mb-3">Add Expense</button>
+    </div>
+  </div>
+
+  <div class="row mt-4" id="output"></div>
+</div>
+
+<script>
+  // Register service worker
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('service-worker.js')
+      .then(() => console.log("Service Worker Registered"))
+      .catch(err => console.error("SW failed:", err));
+  }
+
+  function saveBudget() {
+    const budget = Number(document.getElementById("budget").value);
+    localStorage.setItem("budget", budget);
+    alert("Budget saved: P" + budget);
+    updateOutput();
+  }
+
+  function addExpense() {
+    const expense = Number(document.getElementById("expense").value);
+    const expenses = JSON.parse(localStorage.getItem("expenses")) || [];
+    expenses.push(expense);
+    localStorage.setItem("expenses", JSON.stringify(expenses));
+    alert("Expense added: P" + expense);
+    updateOutput();
+  }
+
+  function updateOutput() {
+    const budget = Number(localStorage.getItem("budget")) || 0;
+    const expenses = JSON.parse(localStorage.getItem("expenses")) || [];
+    const totalExpenses = expenses.reduce((a,b)=>a+b,0);
+    const balance = budget - totalExpenses;
+
+    const output = document.getElementById("output");
+    output.innerHTML = `
+      <div class="col-md-12 mt-3">
+        <div class="card shadow">
+          <div class="card-body text-center">
+            <h5>Total Budget: P${budget}</h5>
+            <h5>Total Expenses: P${totalExpenses}</h5>
+            <h5>Balance: P${balance}</h5>
+            <p>Expenses: ${expenses.join(", ")}</p>
+            <button class="btn btn-danger mt-2" onclick="clearAll()">Clear All</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function clearAll() {
+    localStorage.removeItem("budget");
+    localStorage.removeItem("expenses");
+    updateOutput();
+    alert("All cleared!");
+  }
+
+  // Load output on page load
+  updateOutput();
+</script>
+
+</body>
+</html>
